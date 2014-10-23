@@ -1,0 +1,45 @@
+---
+title: "The Effect of Vc on ToothGrowth in Guinea Pigs"
+output: pdf_document
+---
+## Introduction
+This part analyze the effects of vitamin C on tooth growth in 10 guinea Pigs at different doses. The vitemin c is provide either by organge juice(oj) or ascorbic acid.
+
+## Exploratory data analysis
+```{r echo = TRUE, fig.height = 3.5}
+library(ggplot2)
+library(plyr)
+data(ToothGrowth)
+summary(ToothGrowth)
+str(ToothGrowth)
+print("Plot 1: Lens vs dose by different types of supply")
+ggplot(ToothGrowth, aes(x=dose, y=len, fill=factor(dose)))+ 
+    geom_boxplot()+ facet_wrap(~supp)+theme_bw()+guides(fill=guide_legend("Dose"))
+mean_table <- ddply(ToothGrowth, .(supp, dose), function(x) mean(x$len))
+names(mean_table)[3] <- "mean_len"
+print("Plot 2. Average lens for different doses and supply types")
+ggplot(mean_table, aes(x=dose, y =mean_len, col=supp))+geom_point()+theme_bw()
+```
+
+## Statistical inferences and assumptions
+Using t teset to evaluate the null hypothesis that $\mu_{OJ}=\mu_{VC}$ at different doses.
+Assume all the conditions are equal other than the supplyment methods and doses for the guinea pigs and all of them have similar physical parameters(size, diet, age etc).
+```{r echo = TRUE}
+# t-test
+T_test <- function(df){
+    dose <- unique(df$dose)
+    temp <- data.frame()
+    p_value <- data.frame()
+    for(i in dose){
+        res <- t.test(len~supp, data=subset(df, dose==i), paired=FALSE, var.equal=FALSE)
+        print(paste("95% confidence interval for dose",i,"is"
+                    ,round(min(res$conf),3),"~",round(max(res$conf),3)))
+        print(paste("p-value for this test is", round(res$p.value,3)))
+    }
+}
+T_test(ToothGrowth)
+```
+
+## Conculsion
+1. According to the p-values, with 2mg dose, organge juice and ascorbic acid have same effect on tooth growth in guinea pigs, but at lower doses, 0.5mg and 1mg(much smaller p-value, indicates significant differences in mean value), orange juice results longer teeth, which have been demonstrated in the plot 2. 
+2. The 95% confidence intervals for different doses are also provided in the previous part,at dose 2mg the confidence interval contains 0, while the other two do not. This also indicates that at dose 2mg, the two methods do not have significantly different effects on tooth growth.
